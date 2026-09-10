@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-Candidates and evaluators reviewing full-stack repositories frequently encounter broken setups due to hard dependencies on external database daemons, unconfigured Docker engines, or complex cloud connection secrets. At the same time, enterprise job descriptions require demonstrable experience with production relational databases (PostgreSQL) and containerization (Docker, Kubernetes).
+Local service dashboards often become hard to run when they depend on external database daemons, unconfigured Docker engines, or cloud connection secrets. PulseOps needs a setup that works immediately for local development while still supporting a PostgreSQL-backed container runtime.
 
 ## Decision
 We implemented a dual-strategy architecture:
@@ -17,8 +17,8 @@ We implemented a dual-strategy architecture:
 
 ## Consequences
 ### Positive
-- Reviewers can evaluate the application in under 2 minutes without configuring Docker or Postgres locally.
-- DevOps / Cloud reviewers can deploy the exact same repository via Docker Compose or Kubernetes manifests.
+- Developers can run the application quickly without configuring Docker or Postgres locally.
+- Platform teams can deploy the same codebase via Docker Compose or Kubernetes manifests.
 
 ### Negative
 - Query syntax must adhere to standard SQL supported across both SQLite and PostgreSQL dialects (e.g. standard quotes, parameterization).

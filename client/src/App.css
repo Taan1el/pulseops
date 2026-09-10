@@ -135,8 +135,8 @@ body {
   background-color: currentColor;
 }
 
-/* Overview Banner */
-.overview-highlight-banner {
+/* System overview banner */
+.system-overview-banner {
   background: #eff6ff;
   border-bottom: 1px solid #bfdbfe;
   padding: 12px 24px;

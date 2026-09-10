@@ -68,14 +68,14 @@ describe('PulseOps Frontend App', () => {
     vi.spyOn(api, 'getMetrics').mockResolvedValue(mockMetrics)
   })
 
-  it('renders application brand, overview banner, and metrics', async () => {
+  it('renders application brand, system overview, and metrics', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'PulseOps' })).toBeInTheDocument()
     expect(
       screen.getByText(/Incident & Service Health Platform/),
     ).toBeInTheDocument()
-    expect(screen.getByText('FULL-STACK EVALUATION')).toBeInTheDocument()
+    expect(screen.getByText('SYSTEM OVERVIEW')).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('99.91%')).toBeInTheDocument()

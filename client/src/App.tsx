@@ -96,12 +96,11 @@ export function App() {
         onOpenReportModal={() => setIsReportOpen(true)}
       />
 
-      {/* Overview Banner */}
-      <section className="overview-highlight-banner" aria-label="Quick Overview">
+      <section className="system-overview-banner" aria-label="System overview">
         <div className="banner-content">
-          <div className="banner-tag">FULL-STACK EVALUATION</div>
+          <div className="banner-tag">SYSTEM OVERVIEW</div>
           <p>
-            <strong>PulseOps</strong> is an engineering incident & SLA platform demonstrating{' '}
+            <strong>PulseOps</strong> is an engineering incident & SLA platform using{' '}
             <strong>React 19 + TypeScript</strong>, <strong>Node.js / Express REST API</strong>,{' '}
             <strong>Relational SQLite/PostgreSQL</strong>, <strong>Docker Compose</strong>, and{' '}
             <strong>Automated State Transitions</strong>.
