@@ -2,6 +2,7 @@
   "name": "pulseops",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Full-stack Incident & Service Health Management Platform",
   "workspaces": [
     "server",
