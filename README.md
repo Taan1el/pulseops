@@ -1,124 +1,214 @@
 # PulseOps
 
-> Production-grade Incident & Service Health Management Platform built with **React 19**, **Node.js (Express)**, **TypeScript**, **Relational SQLite / PostgreSQL**, and **Docker**.
+PulseOps is a dashboard for tracking service health, declaring incidents, and following incident timelines from a single view.
 
-[![CI Pipeline](https://github.com/Taan1el/pulseops/actions/workflows/ci.yml/badge.svg)](https://github.com/Taan1el/pulseops/actions)
-![Node.js](https://img.shields.io/badge/Node.js-v24-339933?logo=node.js)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
+[![CI](https://github.com/Taan1el/pulseops/actions/workflows/ci.yml/badge.svg)](https://github.com/Taan1el/pulseops/actions/workflows/ci.yml)
+[![Pages](https://github.com/Taan1el/pulseops/actions/workflows/pages.yml/badge.svg)](https://github.com/Taan1el/pulseops/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
----
+**Live demo:** https://taan1el.github.io/pulseops/
 
-## 2-Minute Product Walkthrough
+The demo runs entirely in your browser: there is no backend behind it, and the data is simulated and stored in your browser's local storage.
 
-PulseOps is designed for quickly checking service health, declaring incidents, and following operational state changes from a single dashboard.
+## Screenshots
 
-If dashboard data cannot load, a persistent error offers a Retry button. After a
-failed refresh, the last complete snapshot stays visible with an outdated-data
-warning. Retry reloads services, incidents, and metrics together without repeating
-incident or service changes. Data updates only when all three reads succeed.
+![Dashboard overview with services, incidents, and metrics](docs/screenshots/dashboard-overview.png)
 
-| Area | Implementation |
+![A P1 incident declared against a service, showing the outage status and timeline](docs/screenshots/incident-declared.png)
+
+## Features
+
+- Register services with a name, description, and criticality tier (critical, standard, internal).
+- Declare incidents against a service with a title, a severity (P1 to P4), and a summary.
+- Post timeline updates on an incident (investigating, identified, monitoring, resolved) with a public note.
+- Automatic status transitions: declaring a P1 incident forces the service into outage, a P2 degrades it unless it is already down, and a P3 degrades it only if it was fully operational. Resolving the last active incident on a service restores it to operational.
+- Live system metrics: overall SLA (the average of each service's own uptime figure), service health counts, active incident count, and resolved incident count.
+- Filter services by tier and incidents by status or severity.
+- A persistent error banner with a retry action when the dashboard's data fails to load. If a snapshot was already loaded, that data stays on screen with an outdated-data notice instead of disappearing.
+- Keyboard support in the three modals: Escape closes the open one, and focus moves to its first field automatically.
+
+## Getting started
+
+Prerequisites: Node.js 24 or later (built and tested with 24.14.1) and npm 11. No database, Docker, or other services are required.
+
+```bash
+# 1. Install dependencies for every workspace
+npm install
+
+# 2. Start the API and the dashboard together
+npm run dev
+```
+
+This starts the API on [http://localhost:4000](http://localhost:4000) and the dashboard on [http://localhost:5173](http://localhost:5173). Open the dashboard URL; it proxies `/api` requests to the API for you. To run them in separate terminals instead, use `npm run dev:server` and `npm run dev:client`.
+
+### Environment variables
+
+Nothing needs to be set to run the app locally; these are only for overriding the defaults. Copy `server/.env.example` to `server/.env` or `client/.env.example` to `client/.env.local` if you want to change them. Both are loaded automatically (the server via Node's `--env-file-if-exists`, the client via Vite), and an exported environment variable always takes priority over the file.
+
+| Variable | Where | Default | Purpose |
+| :--- | :--- | :--- | :--- |
+| `PORT` | `server/.env.example` | `4000` | Port the API listens on. |
+| `DATABASE_PATH` | `server/.env.example` | `./data/pulseops.db` | Path to the SQLite database file, created automatically if missing. |
+| `VITE_API_TARGET` | `client/.env.example` | `http://localhost:4000` | Where the Vite dev server proxies `/api` requests. |
+
+## Scripts
+
+Run from the repository root unless noted.
+
+| Script | What it does |
 | :--- | :--- |
-| **Dashboard** | `client/`: React 19, TypeScript, Vite, accessible modals (`aria-modal`, `role="dialog"`), responsive CSS grid/flexbox, live SLA counters, and status steppers. |
-| **API** | `server/`: Express REST API organized in a clean layered architecture (routes &rarr; controllers &rarr; domain services &rarr; repositories &rarr; error middleware). |
-| **Container Runtime** | `Dockerfile`: Production multi-stage build compiling client and server into a secure, minimal Alpine runner.<br>`docker-compose.yml`: Multi-container setup orchestrating app and PostgreSQL 16 with health checks. |
-| **Architecture Notes** | `docs/adr/`: Architecture Decision Records documenting key trade-offs:<br>• [ADR-001](docs/adr/ADR-001-monorepo-workspace.md): Monorepo & Shared Types<br>• [ADR-002](docs/adr/ADR-002-relational-state-machine.md): Relational State Machine<br>• [ADR-003](docs/adr/ADR-003-dual-database-and-containerization.md): Dual SQLite & PostgreSQL Strategy |
-| **Relational Storage** | `server/src/db/schema.ts`: Foreign keys, cascade rules, indexes, and automated incident state transitions. Runs zero-config via built-in `node:sqlite` locally and supports PostgreSQL. |
-| **Quality Gates** | 13 automated tests across backend API endpoints (`supertest` + `vitest`) and React components (`@testing-library/react`), executed on every commit via GitHub Actions. |
+| `npm run dev` | Runs the API and the dashboard together. |
+| `npm run dev:server` | Runs only the API, with automatic restarts on change. |
+| `npm run dev:client` | Runs only the Vite dev server for the dashboard. |
+| `npm run build` | Builds the server and the client for production. |
+| `npm run build:pages` | Builds the client as a static, backend-free bundle with demo mode on, base path `/pulseops/`, for GitHub Pages. |
+| `npm test` | Runs the server and client test suites. |
+| `npm run lint` | Type-checks the server and the client. |
 
----
+## How it works
 
-## Architecture & Code Map
+The client is a single-page React dashboard. In normal use it talks to the Express API over `/api/*`; the API keeps its state in a SQLite database (via Node's built-in `node:sqlite`) and applies the incident state machine before returning a response. The GitHub Pages build swaps the API client for an in-browser one with the same functions, backed by `localStorage` instead of a server, so the same UI works with no backend at all.
+
+```mermaid
+flowchart LR
+    subgraph Browser
+        UI[React dashboard]
+    end
+    subgraph "Local dev or Docker"
+        API[Express API]
+        DB[(SQLite file)]
+    end
+    subgraph "GitHub Pages demo"
+        Demo[In-browser demo API]
+        LS[(localStorage)]
+    end
+
+    UI -- "fetch /api/*" --> API
+    API --> DB
+    UI -. "VITE_DEMO_MODE=true" .-> Demo
+    Demo --> LS
+```
+
+Project layout:
 
 ```
 pulseops/
-├── .github/workflows/ci.yml         # Automated CI test, lint & build matrix
-├── client/                          # React 19 + TypeScript frontend
-│   ├── src/
-│   │   ├── components/              # ServiceGrid, IncidentFeed, MetricsCards, Modals
-│   │   ├── services/api.ts          # Typed REST API client
-│   │   ├── App.tsx                  # Dashboard layout & state coordination
-│   │   ├── App.css                  # Custom design tokens, focus styles & responsive layout
-│   │   └── App.test.tsx             # Component & user interaction tests
-│   └── vite.config.ts               # Proxy configuration & test setup
-├── server/                          # Node.js + TypeScript backend
-│   ├── src/
-│   │   ├── controllers/             # Service, Incident & Metrics request handlers
-│   │   ├── services/                # Incident state machine (auto status transitions)
-│   │   ├── repositories/            # Typed SQL queries & data access layer
-│   │   ├── db/                      # Schema DDL, seed data & database connection
-│   │   ├── routes/                  # Express route factories
-│   │   ├── middleware/              # Error handling & logging
-│   │   └── app.ts / index.ts        # App setup & graceful shutdown
-│   └── test/api.test.ts             # Full API integration test suite
-├── shared/types.ts                  # Shared TypeScript domain contracts & DTOs
-├── docs/
-│   ├── adr/                         # Architecture Decision Records (ADR-001 to 003)
-│   └── api.md                       # REST API endpoint specifications
-├── Dockerfile                       # Multi-stage production container
-└── docker-compose.yml               # Container orchestration (Node API + PostgreSQL)
+  client/               React 19 + TypeScript dashboard (Vite)
+    src/components/     Navbar, service grid, incident feed, metrics, modals
+    src/services/       api.ts (HTTP client) and demoApi.ts (in-browser stand-in)
+  server/               Express + TypeScript API
+    src/routes/         Route definitions per resource
+    src/controllers/    Request handling and input validation
+    src/services/       Incident state-machine and metrics logic
+    src/repositories/   SQL access
+    src/db/             Schema, seed data, and the SQLite connection
+  shared/               Domain types and pure logic used by both the API and the demo build
+  docs/adr/             Architecture decision records
 ```
 
----
+## API reference
 
-## Quickstart
+Base URL: `http://localhost:4000/api`. Every response is JSON shaped as `{ "success": true, "data": ... }` or `{ "success": false, "error": "..." }`.
 
-### Option A: Zero-Config Local Run (Recommended)
-Requires only Node.js (v22+). No Docker or external database daemon required!
+### Health
+
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| GET | `/health` | Returns `{ status, timestamp, database, uptimeSeconds, version }`, 200 if the database responds, 503 otherwise. |
+
+### Services
+
+| Method | Path | Body | Success | Errors |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/services` | - | 200, array of services, critical tier first then alphabetical | - |
+| GET | `/services/:id` | - | 200, one service | 404 if no service has that id |
+| POST | `/services` | `{ name, description, tier?, status?, slug? }` | 201, the created service | 400 if `name` or `description` is missing or not a string, or `tier`/`status` is not a valid value; 409 if the generated or given slug is already in use |
+| PATCH | `/services/:id` | `{ name?, description?, status?, tier? }` | 200, the updated service | 400 for an invalid `tier`/`status`; 404 if no service has that id |
+
+Valid `tier` values: `critical`, `standard`, `internal`. Valid `status` values: `operational`, `degraded`, `outage`, `maintenance`.
+
+### Incidents
+
+| Method | Path | Body | Success | Errors |
+| :--- | :--- | :--- | :--- | :--- |
+| GET | `/incidents?status=&serviceId=` | - | 200, array of incidents (open ones first, newest first within each group), optionally filtered | - |
+| GET | `/incidents/:id` | - | 200, one incident with its timeline `updates` | 404 if no incident has that id |
+| POST | `/incidents` | `{ title, severity, serviceId, summary, initialStatus? }` | 201, the created incident, and an automatic status change on its service (see Features) | 400 if a required field is missing or `severity`/`initialStatus` is invalid; 404 if `serviceId` does not match a service |
+| POST | `/incidents/:id/updates` | `{ status, message }` | 200, `{ incident, update }`; resolving the last active incident on a service restores it to operational | 400 if a field is missing or `status` is invalid; 404 if no incident has that id |
+
+Valid incident `severity` values: `p1`, `p2`, `p3`, `p4`. Valid `status`/`initialStatus` values: `investigating`, `identified`, `monitoring`, `resolved`.
+
+Example: declaring an incident.
 
 ```bash
-# 1. Install dependencies across all workspaces
-npm install
-
-# 2. Start backend server (http://localhost:4000)
-npm run dev:server
-
-# 3. In another terminal, start frontend dashboard (http://localhost:5173)
-npm run dev:client
+curl -X POST http://localhost:4000/api/incidents \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Elevated checkout errors","severity":"p1","serviceId":2,"summary":"Checkout requests failing with 502s."}'
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to view the live dashboard.
+```json
+{
+  "success": true,
+  "data": {
+    "id": 7,
+    "title": "Elevated checkout errors",
+    "status": "investigating",
+    "severity": "p1",
+    "serviceId": 2,
+    "serviceName": "Payment Processing Gateway",
+    "summary": "Checkout requests failing with 502s.",
+    "createdAt": "2026-09-13T20:45:00.000Z",
+    "resolvedAt": null,
+    "updates": [
+      {
+        "id": 3,
+        "incidentId": 7,
+        "status": "investigating",
+        "message": "Incident opened: Checkout requests failing with 502s.",
+        "createdAt": "2026-09-13T20:45:00.000Z"
+      }
+    ]
+  }
+}
+```
 
----
+## Testing
 
-### Option B: Docker Compose
-Runs the complete containerized stack:
+60 tests across both workspaces, run with `npm test`:
+
+- **Server** (`server/test/`): the domain logic in `shared/domain.ts` (slug generation, status transitions, metrics) with edge cases; the full HTTP API through `supertest`, covering happy paths, validation errors, not-found and conflict responses, malformed JSON, and static-client serving.
+- **Client** (`client/src/`): the dashboard's data loading, error and retry behavior (including stale in-flight requests), modal interactions and keyboard support, and the in-browser demo API's behavior against the same rules the server enforces.
+
+No test suite mocks a heading render or snapshot-tests a component tree; each test exercises real behavior.
+
+## Deployment
+
+### Docker
 
 ```bash
 docker compose up --build
 ```
 
-Access the application at [http://localhost:4000](http://localhost:4000).
+Builds the client and the server, then runs one container that serves the dashboard and the API from `http://localhost:4000`. Data persists in a named volume. Docker is not part of this project's local development flow, so the image is built and smoke-tested in CI (see `.github/workflows/ci.yml`) rather than by hand here.
 
----
+### GitHub Pages (demo build)
 
-## Quality Checks & Automated Tests
+`npm run build:pages` builds the client with demo mode on and outputs static files to `client/dist`. `.github/workflows/pages.yml` builds and publishes that output on every push to `master`. The deploy step only runs once this repository is public; until then the build still has to pass.
 
-```bash
-# Run all unit and integration tests (13 tests)
-npm test
+## Design notes and limitations
 
-# Run TypeScript typechecks across backend and frontend
-npm run lint
+- The API has no authentication or authorization. Anyone who can reach it can create services and incidents. Do not expose it on a public network as-is.
+- State lives in a single SQLite file (`node:sqlite`), read and written by one process. It is not built for multiple API instances writing concurrently.
+- The demo build's data lives only in your browser's `localStorage`. Clearing site data or opening a private window starts you over; use "Reset demo data" in the banner to do that on purpose.
+- Service uptime is a value you set (100% for a newly registered service); the dashboard averages and displays it, it does not measure real uptime.
 
-# Compile production bundles for client and server
-npm run build
-```
+## Roadmap
 
----
+- Authentication and per-user permissions for declaring incidents and managing services.
+- Pagination for the incident feed once a deployment has more history than fits on one screen.
+- Webhook or email notifications when a P1 or P2 incident is declared.
+- Multi-service incidents, so one outage can be linked to more than one affected service.
 
-## Key Features Demonstrated
+## License
 
-1. **Automated Incident State Machine**:
-   - Declaring a **P1 - Critical** incident automatically transitions the affected microservice status to `outage`.
-   - Declaring a **P2 - Major** incident transitions the microservice status to `degraded`.
-   - Resolving the incident automatically verifies if any remaining active incidents exist, and restores the service status to `operational`.
-2. **Interactive Incident Lifecycle**:
-   - Step through investigation milestones: `Investigating` &rarr; `Identified` &rarr; `Monitoring` &rarr; `Resolved`.
-   - Timeline log recording public notes with relative timestamps.
-3. **Live System SLA & Counters**:
-   - Real-time computation of overall system uptime percentage and service distribution.
-4. **Accessible Forms & Modal Dialogs**:
-   - WCAG AA contrast, explicit `htmlFor`/`id` labels, `:focus-visible` styling, and screen-reader announcements.
+MIT, see [LICENSE](LICENSE).

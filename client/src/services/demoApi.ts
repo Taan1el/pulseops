@@ -128,8 +128,8 @@ function createSeedState(): DemoState {
 
 function isDemoState(value: unknown): value is DemoState {
   if (!value || typeof value !== 'object') return false
-  const candidate = value as Partial<DemoState>
-  return Array.isArray(candidate.services) && Array.isArray(candidate.incidents)
+  const maybeState = value as Partial<DemoState>
+  return Array.isArray(maybeState.services) && Array.isArray(maybeState.incidents)
 }
 
 function loadState(): DemoState {
