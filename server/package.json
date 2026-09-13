@@ -8,9 +8,9 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc",
-    "start": "node dist/server/src/index.js",
+    "start": "node --env-file-if-exists=.env dist/server/src/index.js",
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },
