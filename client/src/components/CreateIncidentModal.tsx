@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { CreateIncidentDto, IncidentSeverity, Service } from '../../../shared/types'
+import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
 interface CreateIncidentModalProps {
   services: Service[]
@@ -20,6 +21,8 @@ export function CreateIncidentModal({
   const [summary, setSummary] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEscapeToClose(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -83,6 +86,7 @@ export function CreateIncidentModal({
           <div className="form-group">
             <label htmlFor="incident-title">Incident Title *</label>
             <input
+              autoFocus
               id="incident-title"
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Elevated Database Connection Pool Saturation"

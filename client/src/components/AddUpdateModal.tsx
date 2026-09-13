@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { AddIncidentUpdateDto, Incident, IncidentStatus } from '../../../shared/types'
+import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
 interface AddUpdateModalProps {
   incident: Incident | null
@@ -18,6 +19,8 @@ export function AddUpdateModal({
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEscapeToClose(isOpen, onClose)
 
   if (!isOpen || !incident) return null
 
@@ -82,6 +85,7 @@ export function AddUpdateModal({
           <div className="form-group">
             <label htmlFor="update-status">Lifecycle State *</label>
             <select
+              autoFocus
               id="update-status"
               onChange={(e) => setStatus(e.target.value as IncidentStatus)}
               value={status}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { CreateServiceDto, ServiceTier } from '../../../shared/types'
+import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
 interface NewServiceModalProps {
   isOpen: boolean
@@ -13,6 +14,8 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
   const [tier, setTier] = useState<ServiceTier>('standard')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEscapeToClose(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -75,6 +78,7 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
           <div className="form-group">
             <label htmlFor="service-name">Service Name *</label>
             <input
+              autoFocus
               id="service-name"
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Identity Management Service"
