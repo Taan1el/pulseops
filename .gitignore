@@ -8,17 +8,25 @@ dist/
 build/
 coverage/
 shared/*.js
+*.tsbuildinfo
 
 # Database files
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
-data/
+
+# Runtime data the server creates
+server/data/
 
 # Environment
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
+!client/.env.pages
+
+# Playwright
+playwright-report/
+test-results/
 
 # Logs
 npm-debug.log*

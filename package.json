@@ -3,7 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Full-stack Incident & Service Health Management Platform",
+  "description": "Dashboard for tracking service health, declaring incidents, and following incident timelines.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Taan1el/pulseops.git"
+  },
+  "homepage": "https://taan1el.github.io/pulseops/",
+  "bugs": {
+    "url": "https://github.com/Taan1el/pulseops/issues"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "workspaces": [
     "server",
     "client"
