@@ -869,6 +869,23 @@ body {
   margin-bottom: 16px;
 }
 
+.dashboard-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-error p {
+  flex: 1 1 240px;
+  margin: 0;
+}
+
+.system-status-indicator.unknown {
+  color: #cbd5e1;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

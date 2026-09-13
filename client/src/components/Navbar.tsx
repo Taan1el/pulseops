@@ -2,14 +2,25 @@ interface NavbarProps {
   onOpenReportModal: () => void
   onOpenNewServiceModal: () => void
   activeIncidentsCount: number
+  dataStatus: 'loading' | 'unavailable' | 'stale' | 'ready'
 }
 
 export function Navbar({
   onOpenReportModal,
   onOpenNewServiceModal,
   activeIncidentsCount,
+  dataStatus,
 }: NavbarProps) {
   const isHealthy = activeIncidentsCount === 0
+  const statusLabel = dataStatus === 'loading'
+    ? 'Loading system health'
+    : dataStatus === 'unavailable'
+      ? 'System health unavailable'
+      : dataStatus === 'stale'
+        ? 'System health may be outdated'
+        : isHealthy
+          ? 'All Systems Operational'
+          : `${activeIncidentsCount} Active ${activeIncidentsCount === 1 ? 'Incident' : 'Incidents'}`
 
   return (
     <header className="navbar" role="banner">
@@ -25,13 +36,11 @@ export function Navbar({
         <div className="navbar-actions">
           <div
             aria-live="polite"
-            className={`system-status-indicator ${isHealthy ? 'healthy' : 'impaired'}`}
+            className={`system-status-indicator ${dataStatus !== 'ready' ? 'unknown' : isHealthy ? 'healthy' : 'impaired'}`}
           >
             <span className="pulse-dot" aria-hidden="true" />
             <span>
-              {isHealthy
-                ? 'All Systems Operational'
-                : `${activeIncidentsCount} Active ${activeIncidentsCount === 1 ? 'Incident' : 'Incidents'}`}
+              {statusLabel}
             </span>
           </div>
 

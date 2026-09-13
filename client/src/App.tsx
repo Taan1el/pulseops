@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type {
   CreateIncidentDto,
   CreateServiceDto,
@@ -22,6 +22,7 @@ export function App() {
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   // Modals state
@@ -36,7 +37,12 @@ export function App() {
     }, 4000)
   }
 
+  // Only the most recent load may update state, so a slow older request
+  // cannot overwrite newer data or report a failure that was already recovered.
+  const latestLoadId = useRef(0)
+
   const loadDashboardData = useCallback(async () => {
+    const loadId = ++latestLoadId.current
     try {
       setLoading(true)
       const [fetchedServices, fetchedIncidents, fetchedMetrics] = await Promise.all([
@@ -44,13 +50,18 @@ export function App() {
         api.getIncidents(),
         api.getMetrics(),
       ])
+      if (loadId !== latestLoadId.current) return
       setServices(fetchedServices)
       setIncidents(fetchedIncidents)
       setMetrics(fetchedMetrics)
-    } catch (err: any) {
-      showToast(`Error loading telemetry: ${err.message}`)
+      setLoadFailed(false)
+    } catch {
+      if (loadId !== latestLoadId.current) return
+      setLoadFailed(true)
     } finally {
-      setLoading(false)
+      if (loadId === latestLoadId.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
@@ -92,6 +103,7 @@ export function App() {
 
       <Navbar
         activeIncidentsCount={activeIncidents.length}
+        dataStatus={loadFailed ? (metrics ? 'stale' : 'unavailable') : metrics ? 'ready' : 'loading'}
         onOpenNewServiceModal={() => setIsNewServiceOpen(true)}
         onOpenReportModal={() => setIsReportOpen(true)}
       />
@@ -116,16 +128,39 @@ export function App() {
       </section>
 
       <main className="main-content">
-        <MetricsCards loading={loading} metrics={metrics} />
+        {loadFailed && (
+          <section className="alert-error dashboard-error" aria-label="Dashboard connection error">
+            <p role="alert">
+              Unable to load dashboard data.{' '}
+              {metrics
+                ? 'Showing the last successfully loaded data. It may be outdated.'
+                : 'Service health and incidents are unavailable. Try again to load them.'}
+            </p>
+            <button
+              className="btn btn-secondary"
+              disabled={loading}
+              onClick={() => void loadDashboardData()}
+              type="button"
+            >
+              {loading ? 'Retrying...' : 'Retry'}
+            </button>
+          </section>
+        )}
 
-        <div className="dashboard-grid">
-          <ServiceGrid loading={loading} services={services} />
-          <IncidentFeed
-            incidents={incidents}
-            loading={loading}
-            onOpenAddUpdate={(incident) => setSelectedIncident(incident)}
-          />
-        </div>
+        {(!loadFailed || metrics) && (
+          <div aria-busy={loading}>
+            <MetricsCards loading={loading && !metrics} metrics={metrics} />
+
+            <div className="dashboard-grid">
+              <ServiceGrid loading={loading && !metrics} services={services} />
+              <IncidentFeed
+                incidents={incidents}
+                loading={loading && !metrics}
+                onOpenAddUpdate={(incident) => setSelectedIncident(incident)}
+              />
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Modals */}

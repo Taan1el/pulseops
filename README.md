@@ -14,6 +14,11 @@
 
 PulseOps is designed for quickly checking service health, declaring incidents, and following operational state changes from a single dashboard.
 
+If dashboard data cannot load, a persistent error offers a Retry button. After a
+failed refresh, the last complete snapshot stays visible with an outdated-data
+warning. Retry reloads services, incidents, and metrics together without repeating
+incident or service changes. Data updates only when all three reads succeed.
+
 | Area | Implementation |
 | :--- | :--- |
 | **Dashboard** | `client/`: React 19, TypeScript, Vite, accessible modals (`aria-modal`, `role="dialog"`), responsive CSS grid/flexbox, live SLA counters, and status steppers. |
