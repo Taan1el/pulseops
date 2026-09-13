@@ -8,6 +8,7 @@ import type {
   Service,
   SystemMetrics,
 } from '../../../shared/types'
+import { demoApi } from './demoApi'
 
 const BASE_URL = '/api'
 
@@ -23,7 +24,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return json.data as T
 }
 
-export const api = {
+const httpApi = {
   async getHealth(): Promise<{ status: string; database: string }> {
     const res = await fetch(`${BASE_URL}/health`)
     return res.json()
@@ -80,3 +81,9 @@ export const api = {
     return handleResponse<SystemMetrics>(res)
   },
 }
+
+// The GitHub Pages build has no server behind it, so it ships with
+// VITE_DEMO_MODE=true (see package.json's build:pages script) and every
+// caller gets the in-browser demoApi instead, transparently: both objects
+// expose the same functions with the same return shapes.
+export const api = import.meta.env.VITE_DEMO_MODE === 'true' ? demoApi : httpApi

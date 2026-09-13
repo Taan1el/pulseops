@@ -9,6 +9,7 @@ import type {
 } from '../../shared/types'
 import { api } from './services/api'
 import { Navbar } from './components/Navbar'
+import { DemoModeBanner } from './components/DemoModeBanner'
 import { MetricsCards } from './components/MetricsCards'
 import { ServiceGrid } from './components/ServiceGrid'
 import { IncidentFeed } from './components/IncidentFeed'
@@ -108,24 +109,7 @@ export function App() {
         onOpenReportModal={() => setIsReportOpen(true)}
       />
 
-      <section className="system-overview-banner" aria-label="System overview">
-        <div className="banner-content">
-          <div className="banner-tag">SYSTEM OVERVIEW</div>
-          <p>
-            <strong>PulseOps</strong> is an engineering incident & SLA platform using{' '}
-            <strong>React 19 + TypeScript</strong>, <strong>Node.js / Express REST API</strong>,{' '}
-            <strong>Relational SQLite/PostgreSQL</strong>, <strong>Docker Compose</strong>, and{' '}
-            <strong>Automated State Transitions</strong>.
-          </p>
-          <div className="banner-badges">
-            <span>Node.js / Express</span>
-            <span>React 19</span>
-            <span>Relational SQL</span>
-            <span>Docker Multi-Stage</span>
-            <span>100% Green CI</span>
-          </div>
-        </div>
-      </section>
+      {import.meta.env.VITE_DEMO_MODE === 'true' && <DemoModeBanner />}
 
       <main className="main-content">
         {loadFailed && (

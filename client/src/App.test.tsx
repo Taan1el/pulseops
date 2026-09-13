@@ -65,6 +65,7 @@ describe('PulseOps Frontend App', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.useRealTimers()
+    vi.unstubAllEnvs()
   })
 
   beforeEach(() => {
@@ -73,14 +74,13 @@ describe('PulseOps Frontend App', () => {
     vi.spyOn(api, 'getMetrics').mockResolvedValue(mockMetrics)
   })
 
-  it('renders application brand, system overview, and metrics', async () => {
+  it('renders application brand and metrics', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'PulseOps' })).toBeInTheDocument()
     expect(
       screen.getByText(/Incident & Service Health Platform/),
     ).toBeInTheDocument()
-    expect(screen.getByText('SYSTEM OVERVIEW')).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('99.91%')).toBeInTheDocument()
@@ -140,6 +140,61 @@ describe('PulseOps Frontend App', () => {
     await user.click(closeBtn)
 
     expect(screen.queryByRole('heading', { name: 'Register Service' })).not.toBeInTheDocument()
+  })
+
+  it('closes an open modal when Escape is pressed', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Report Incident' }))
+    expect(screen.getByRole('heading', { name: 'Declare Incident' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('heading', { name: 'Declare Incident' })).not.toBeInTheDocument()
+  })
+
+  it('focuses the first field when the Register Service modal opens', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: '+ Register Service' }))
+
+    expect(screen.getByLabelText('Service Name *')).toHaveFocus()
+  })
+
+  it('hides the demo mode banner by default', async () => {
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('Auth API')).toBeInTheDocument())
+
+    expect(screen.queryByText(/Demo mode\./)).not.toBeInTheDocument()
+  })
+
+  it('shows the demo mode banner and resets data when VITE_DEMO_MODE is enabled', async () => {
+    vi.stubEnv('VITE_DEMO_MODE', 'true')
+    const user = userEvent.setup()
+    const originalLocation = window.location
+    const reloadSpy = vi.fn()
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, reload: reloadSpy },
+    })
+
+    try {
+      render(<App />)
+      await waitFor(() => expect(screen.getByText('Auth API')).toBeInTheDocument())
+
+      expect(screen.getByText(/Demo mode\./)).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'View the source on GitHub' })).toHaveAttribute(
+        'href',
+        'https://github.com/Taan1el/pulseops',
+      )
+
+      await user.click(screen.getByRole('button', { name: 'Reset demo data' }))
+      expect(reloadSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
+    }
   })
 
   it.each(['getServices', 'getIncidents', 'getMetrics'] as const)(
