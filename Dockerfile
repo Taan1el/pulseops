@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy root workspace and client definitions
 COPY package*.json ./
+COPY tsconfig.base.json ./
 COPY client/package*.json ./client/
 COPY shared/ ./shared/
 
@@ -21,6 +22,7 @@ FROM node:24-alpine AS server-builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY tsconfig.base.json ./
 COPY server/package*.json ./server/
 COPY shared/ ./shared/
 
@@ -52,7 +54,8 @@ RUN npm ci --workspace=server --omit=dev
 # Copy compiled backend
 COPY --from=server-builder /app/server/dist ./server/dist
 
-# Copy compiled frontend assets for static serving if desired
+# Copy compiled frontend assets; the server serves these directly (see
+# server/src/app.ts) so one container runs both the API and the dashboard
 COPY --from=client-builder /app/client/dist ./client/dist
 
 # Create persistent data directory with non-root ownership
