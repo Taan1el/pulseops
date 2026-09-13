@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master]
   pull_request:
-    branches: [master, main]
+    branches: [master]
 
 jobs:
   validate:
@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -38,3 +38,18 @@ jobs:
 
       - name: Build client production assets
         run: npm run build:client
+
+      - name: Build the production Docker image
+        run: docker build -t pulseops:ci .
+
+      - name: Smoke test the Docker image
+        run: |
+          docker run -d --name pulseops-smoke -p 4000:4000 pulseops:ci
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:4000/api/health; then break; fi
+            sleep 1
+          done
+          curl -sf http://localhost:4000/api/health
+          curl -sf http://localhost:4000/ | grep -q "PulseOps"
+          docker logs pulseops-smoke
+          docker stop pulseops-smoke
