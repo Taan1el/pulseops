@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../src/app.js'
@@ -132,6 +135,118 @@ describe('PulseOps API Integration Tests', () => {
 
   it('returns 404 for unknown endpoints', async () => {
     const res = await request(app).get('/api/unknown-endpoint')
+    expect(res.status).toBe(404)
+    expect(res.body.success).toBe(false)
+  })
+
+  it('POST /api/services returns 409 for a duplicate name without leaking SQL details', async () => {
+    const res = await request(app).post('/api/services').send({
+      name: 'Core REST API',
+      description: 'Another service that collides with an existing slug.',
+    })
+    expect(res.status).toBe(409)
+    expect(res.body.success).toBe(false)
+    expect(res.body.error).toBe('A service named "Core REST API" already exists')
+    expect(res.body.error.toLowerCase()).not.toContain('sql')
+    expect(res.body.error.toLowerCase()).not.toContain('constraint')
+  })
+
+  it('POST /api/services returns 400 for an invalid tier without leaking SQL details', async () => {
+    const res = await request(app).post('/api/services').send({
+      name: 'Bogus Tier Service',
+      description: 'Should be rejected before it reaches the database.',
+      tier: 'bogus',
+    })
+    expect(res.status).toBe(400)
+    expect(res.body.success).toBe(false)
+    expect(res.body.error).toContain('Invalid tier')
+    expect(res.body.error.toLowerCase()).not.toContain('constraint')
+  })
+
+  it('PATCH /api/services/:id returns 400 for an invalid status without leaking SQL details', async () => {
+    const servicesRes = await request(app).get('/api/services')
+    const targetService = servicesRes.body.data[0]
+
+    const res = await request(app)
+      .patch(`/api/services/${targetService.id}`)
+      .send({ status: 'bogus' })
+
+    expect(res.status).toBe(400)
+    expect(res.body.success).toBe(false)
+    expect(res.body.error).toContain('Invalid status')
+    expect(res.body.error.toLowerCase()).not.toContain('constraint')
+  })
+
+  it('POST /api/incidents returns 404 with a clean message when the service does not exist', async () => {
+    const res = await request(app).post('/api/incidents').send({
+      title: 'Orphan incident',
+      severity: 'p1',
+      serviceId: 999999,
+      summary: 'References a service that was never created.',
+    })
+    expect(res.status).toBe(404)
+    expect(res.body.error).toBe('Service with ID 999999 not found')
+  })
+
+  it('returns 400 for a malformed JSON body instead of a generic server error', async () => {
+    const res = await request(app)
+      .post('/api/services')
+      .set('Content-Type', 'application/json')
+      .send('{"name": "Broken JSON"')
+
+    expect(res.status).toBe(400)
+    expect(res.body.success).toBe(false)
+    expect(res.body.error).toBe('Invalid JSON in request body')
+  })
+})
+
+describe('Static client serving', () => {
+  let db: Database
+  let clientDistPath: string
+
+  beforeEach(() => {
+    db = createTestDatabase()
+    seedDatabase(db)
+    clientDistPath = mkdtempSync(path.join(tmpdir(), 'pulseops-client-dist-'))
+    writeFileSync(path.join(clientDistPath, 'index.html'), '<!doctype html><title>PulseOps</title>')
+  })
+
+  afterEach(() => {
+    db.close()
+    rmSync(clientDistPath, { recursive: true, force: true })
+  })
+
+  it('serves the built client at the root when a build is present', async () => {
+    const app = createApp(db, clientDistPath)
+    const res = await request(app).get('/')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('PulseOps')
+  })
+
+  it('falls back to index.html for client-side routes instead of 404ing', async () => {
+    const app = createApp(db, clientDistPath)
+    const res = await request(app).get('/some/client/route')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('PulseOps')
+  })
+
+  it('still returns a JSON 404 for an unknown API route when a client build is present', async () => {
+    const app = createApp(db, clientDistPath)
+    const res = await request(app).get('/api/unknown-endpoint')
+    expect(res.status).toBe(404)
+    expect(res.body.success).toBe(false)
+  })
+
+  it('still serves the API normally alongside the static client', async () => {
+    const app = createApp(db, clientDistPath)
+    const res = await request(app).get('/api/services')
+    expect(res.status).toBe(200)
+    expect(res.body.success).toBe(true)
+  })
+
+  it('returns a JSON 404 instead of a file when no client build exists', async () => {
+    const app = createApp(db, path.join(clientDistPath, 'does-not-exist'))
+    const res = await request(app).get('/')
     expect(res.status).toBe(404)
     expect(res.body.success).toBe(false)
   })

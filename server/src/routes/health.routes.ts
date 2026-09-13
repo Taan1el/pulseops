@@ -17,12 +17,12 @@ export function createHealthRouter(db: Database): Router {
         uptimeSeconds: process.uptime(),
         version: '1.0.0',
       })
-    } catch (err: any) {
+    } catch (err) {
+      console.error('[PulseOps Health Check]:', err)
       res.status(503).json({
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         database: 'error',
-        error: err.message,
       })
     }
   })

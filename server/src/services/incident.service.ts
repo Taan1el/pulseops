@@ -1,11 +1,12 @@
 import { IncidentRepository } from '../repositories/incident.repository.js'
 import { ServiceRepository } from '../repositories/service.repository.js'
+import { HttpError } from '../utils/http-error.js'
+import { nextServiceStatusForSeverity } from '../../../shared/domain.js'
 import type {
   AddIncidentUpdateDto,
   CreateIncidentDto,
   Incident,
   IncidentUpdate,
-  ServiceStatus,
 } from '../../../shared/types.js'
 
 export class IncidentService {
@@ -25,25 +26,13 @@ export class IncidentService {
   createIncident(dto: CreateIncidentDto): Incident {
     const service = this.serviceRepo.findById(dto.serviceId)
     if (!service) {
-      throw new Error(`Service with ID ${dto.serviceId} not found`)
+      throw new HttpError(404, `Service with ID ${dto.serviceId} not found`)
     }
 
     const incident = this.incidentRepo.create(dto)
 
     // State machine: auto-update service status based on incident severity
-    let nextStatus: ServiceStatus | null = null
-    if (dto.severity === 'p1') {
-      nextStatus = 'outage'
-    } else if (dto.severity === 'p2') {
-      if (service.status !== 'outage') {
-        nextStatus = 'degraded'
-      }
-    } else if (dto.severity === 'p3') {
-      if (service.status === 'operational') {
-        nextStatus = 'degraded'
-      }
-    }
-
+    const nextStatus = nextServiceStatusForSeverity(service.status, dto.severity)
     if (nextStatus) {
       this.serviceRepo.updateStatus(service.id, nextStatus)
     }
@@ -57,7 +46,7 @@ export class IncidentService {
   ): { incident: Incident; update: IncidentUpdate } {
     const existing = this.incidentRepo.findById(incidentId)
     if (!existing) {
-      throw new Error(`Incident with ID ${incidentId} not found`)
+      throw new HttpError(404, `Incident with ID ${incidentId} not found`)
     }
 
     const update = this.incidentRepo.addUpdate({ incidentId, ...dto })

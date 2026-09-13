@@ -53,6 +53,15 @@ export class IncidentController {
         return
       }
 
+      const validStatuses = ['investigating', 'identified', 'monitoring', 'resolved']
+      if (initialStatus && !validStatuses.includes(initialStatus)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid initialStatus. Must be one of: investigating, identified, monitoring, resolved',
+        })
+        return
+      }
+
       const incident = this.incidentService.createIncident({
         title,
         severity,
@@ -62,11 +71,7 @@ export class IncidentController {
       })
 
       res.status(201).json({ success: true, data: incident })
-    } catch (err: any) {
-      if (err.message?.includes('not found')) {
-        res.status(404).json({ success: false, error: err.message })
-        return
-      }
+    } catch (err) {
       next(err)
     }
   }
@@ -95,11 +100,7 @@ export class IncidentController {
 
       const result = this.incidentService.addUpdate(id, { status, message })
       res.status(200).json({ success: true, data: result })
-    } catch (err: any) {
-      if (err.message?.includes('not found')) {
-        res.status(404).json({ success: false, error: err.message })
-        return
-      }
+    } catch (err) {
       next(err)
     }
   }

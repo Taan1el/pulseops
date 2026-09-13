@@ -2,6 +2,9 @@ import type { Request, Response, NextFunction } from 'express'
 import { ServiceRepository } from '../repositories/service.repository.js'
 import type { CreateServiceDto, UpdateServiceDto } from '../../../shared/types.js'
 
+const VALID_TIERS = ['critical', 'standard', 'internal']
+const VALID_STATUSES = ['operational', 'degraded', 'outage', 'maintenance']
+
 export class ServiceController {
   constructor(private serviceRepo: ServiceRepository) {}
 
@@ -31,10 +34,26 @@ export class ServiceController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, description, tier, status } = req.body as CreateServiceDto
-      if (!name || !description) {
+      if (!name || typeof name !== 'string' || !description || typeof description !== 'string') {
         res.status(400).json({
           success: false,
           error: 'Name and description are required',
+        })
+        return
+      }
+
+      if (tier && !VALID_TIERS.includes(tier)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}`,
+        })
+        return
+      }
+
+      if (status && !VALID_STATUSES.includes(status)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`,
         })
         return
       }
@@ -50,6 +69,23 @@ export class ServiceController {
     try {
       const id = Number(req.params.id)
       const data = req.body as UpdateServiceDto
+
+      if (data.tier && !VALID_TIERS.includes(data.tier)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}`,
+        })
+        return
+      }
+
+      if (data.status && !VALID_STATUSES.includes(data.status)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`,
+        })
+        return
+      }
+
       const service = this.serviceRepo.update(id, data)
       if (!service) {
         res.status(404).json({ success: false, error: 'Service not found' })

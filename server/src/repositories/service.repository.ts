@@ -1,4 +1,6 @@
 import { Database } from '../db/database.js'
+import { generateSlug } from '../../../shared/domain.js'
+import { HttpError } from '../utils/http-error.js'
 import type {
   CreateServiceDto,
   Service,
@@ -54,12 +56,10 @@ export class ServiceRepository {
   }
 
   create(dto: CreateServiceDto): Service {
-    const slug =
-      dto.slug ??
-      dto.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')
+    const slug = dto.slug ?? generateSlug(dto.name)
+    if (this.findBySlug(slug)) {
+      throw new HttpError(409, `A service named "${dto.name}" already exists`)
+    }
     const now = new Date().toISOString()
     const status = dto.status ?? 'operational'
     const tier = dto.tier ?? 'standard'
