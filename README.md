@@ -12,9 +12,9 @@ The demo runs entirely in your browser: there is no backend behind it, and the d
 
 ## Screenshots
 
-![Dashboard overview with services, incidents, and metrics](docs/screenshots/dashboard-overview.png)
+![Dashboard with the stats strip, the services table, and the incident timeline](docs/screenshots/01-dashboard.png)
 
-![A P1 incident declared against a service, showing the outage status and timeline](docs/screenshots/incident-declared.png)
+More screenshots: [a P1 incident declared against a service, showing the outage status and timeline](docs/screenshots/02-incident-declared.png), [the dashboard at phone width](docs/screenshots/03-mobile.png).
 
 ## Features
 
@@ -94,7 +94,7 @@ Project layout:
 ```
 pulseops/
   client/               React 19 + TypeScript dashboard (Vite)
-    src/components/     Navbar, service grid, incident feed, metrics, modals
+    src/components/     Header, demo bar, stats strip, services table, incident timeline, modals
     src/services/       api.ts (HTTP client) and demoApi.ts (in-browser stand-in)
   server/               Express + TypeScript API
     src/routes/         Route definitions per resource
@@ -174,7 +174,7 @@ curl -X POST http://localhost:4000/api/incidents \
 
 ## Testing
 
-60 tests across both workspaces, run with `npm test`:
+65 tests across both workspaces, run with `npm test`:
 
 - **Server** (`server/test/`): the domain logic in `shared/domain.ts` (slug generation, status transitions, metrics) with edge cases; the full HTTP API through `supertest`, covering happy paths, validation errors, not-found and conflict responses, malformed JSON, and static-client serving.
 - **Client** (`client/src/`): the dashboard's data loading, error and retry behavior (including stale in-flight requests), modal interactions and keyboard support, and the in-browser demo API's behavior against the same rules the server enforces.

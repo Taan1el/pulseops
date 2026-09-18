@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Redesigned the dashboard: a light paper theme with one signal-blue accent color, replacing the dark navy header and its four saturated status-pill colors.
+- Self-hosted the Sora, Geist and Geist Mono fonts instead of the system font stack, with numbers, IDs and timestamps set in mono everywhere.
+- Removed all gradients and drop shadows from the header, stat cards, service cards and buttons; dialogs keep a shadow since they float above the page.
+- Replaced the four identical stat cards with a single stats strip (SLA, services healthy, open incidents, resolved).
+- Rebuilt the service list as a table (service, status, tier, SLA, updated) instead of cards with a colored left border.
+- Rebuilt the incident feed as a vertical timeline: severity as a small bordered badge, status steps as plain text with the current step marked, and each incident's own updates as a nested timeline.
+- Turned the tier, status and severity filters into compact 44px segmented controls.
+- Resized every button, input and link so no control is shorter than 44px.
+- Rewrote the UI copy in plain terms ("Declare incident", "Register service", "Update status") and removed promotional and jargon-heavy phrasing.
+- Replaced the cream demo banner with a slim, ink-on-white demo bar.
+
 ## [1.0.0] - 2026-09-13
 
 ### Added
