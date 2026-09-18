@@ -1,74 +1,56 @@
 import type { SystemMetrics } from '../../../shared/types'
+import { pluralize } from '../utils/pluralize'
 
-interface MetricsCardsProps {
+interface StatsStripProps {
   metrics: SystemMetrics | null
   loading: boolean
 }
 
-export function MetricsCards({ metrics, loading }: MetricsCardsProps) {
+export function StatsStrip({ metrics, loading }: StatsStripProps) {
   if (loading || !metrics) {
     return (
-      <section aria-label="System Metrics" className="metrics-grid skeleton-container">
-        {[1, 2, 3, 4].map((i) => (
-          <div className="metric-card skeleton-card" key={i} />
-        ))}
-      </section>
+      <section aria-label="System metrics" className="stats-strip skeleton skeleton-stats" />
     )
   }
 
   return (
-    <section aria-label="System Metrics" className="metrics-grid">
-      <article className="metric-card">
-        <span className="metric-label">System SLA (30d)</span>
-        <div className="metric-value-row">
-          <span className="metric-value">{metrics.overallUptime}%</span>
-          <span className="metric-pill success">High SLA</span>
+    <section aria-label="System metrics" className="stats-strip">
+      <div className="stat-cell">
+        <span className="stat-label">SLA (30d)</span>
+        <span className="stat-value">{metrics.overallUptime}%</span>
+        <div
+          aria-label="SLA over 30 days"
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={metrics.overallUptime}
+          className="stat-meter"
+          role="meter"
+        >
+          <div className="stat-meter-fill" style={{ width: `${metrics.overallUptime}%` }} />
         </div>
-        <p className="metric-sub">Average across {metrics.totalServices} registered services</p>
-      </article>
+      </div>
 
-      <article className="metric-card">
-        <span className="metric-label">Service Health</span>
-        <div className="metric-value-row">
-          <span className="metric-value">
-            {metrics.operationalCount} / {metrics.totalServices}
-          </span>
-          <span
-            className={`metric-pill ${
-              metrics.operationalCount === metrics.totalServices ? 'success' : 'warning'
-            }`}
-          >
-            {metrics.operationalCount === metrics.totalServices ? '100% Online' : 'Degraded'}
-          </span>
-        </div>
-        <p className="metric-sub">
-          {metrics.degradedCount} degraded, {metrics.outageCount} outage
-        </p>
-      </article>
+      <div className="stat-cell">
+        <span className="stat-label">Services healthy</span>
+        <span className="stat-value">
+          {metrics.operationalCount} / {metrics.totalServices}
+        </span>
+        <span className="stat-note">
+          {metrics.degradedCount} degraded, {metrics.outageCount} {pluralize(metrics.outageCount, 'outage')}
+        </span>
+      </div>
 
-      <article className="metric-card">
-        <span className="metric-label">Active Incidents</span>
-        <div className="metric-value-row">
-          <span className="metric-value">{metrics.activeIncidentCount}</span>
-          <span
-            className={`metric-pill ${
-              metrics.activeIncidentCount === 0 ? 'success' : 'danger'
-            }`}
-          >
-            {metrics.activeIncidentCount === 0 ? 'Clear' : 'Action Required'}
-          </span>
-        </div>
-        <p className="metric-sub">P1-P4 incidents currently in investigation</p>
-      </article>
+      <div className="stat-cell">
+        <span className="stat-label">Open incidents</span>
+        <span className="stat-value">{metrics.activeIncidentCount}</span>
+        <span className="stat-note">P1 to P4, currently under investigation</span>
+      </div>
 
-      <article className="metric-card">
-        <span className="metric-label">Resolved (30d)</span>
-        <div className="metric-value-row">
-          <span className="metric-value">{metrics.resolvedIncidentCount}</span>
-          <span className="metric-pill neutral">Historical</span>
-        </div>
-        <p className="metric-sub">Successfully remediated with post-mortems</p>
-      </article>
+      <div className="stat-cell">
+        <span className="stat-label">Resolved (30d)</span>
+        <span className="stat-value">{metrics.resolvedIncidentCount}</span>
+        <span className="stat-note">Closed with a timeline note</span>
+      </div>
     </section>
   )
 }
