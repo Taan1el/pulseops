@@ -7,18 +7,30 @@ interface IncidentFeedProps {
   onOpenAddUpdate: (incident: Incident) => void
 }
 
-const SEVERITY_CONFIG: Record<IncidentSeverity, { label: string; class: string }> = {
-  p1: { label: 'P1 - Critical Outage', class: 'severity-p1' },
-  p2: { label: 'P2 - Major Impairment', class: 'severity-p2' },
-  p3: { label: 'P3 - Minor Disruption', class: 'severity-p3' },
-  p4: { label: 'P4 - Low / Informational', class: 'severity-p4' },
+const SEVERITY_LABEL: Record<IncidentSeverity, string> = {
+  p1: 'P1 Critical outage',
+  p2: 'P2 Major impairment',
+  p3: 'P3 Minor disruption',
+  p4: 'P4 Low impact',
 }
 
 const STATUS_STEPS: IncidentStatus[] = ['investigating', 'identified', 'monitoring', 'resolved']
+const STATUS_LABEL: Record<IncidentStatus, string> = {
+  investigating: 'Investigating',
+  identified: 'Identified',
+  monitoring: 'Monitoring',
+  resolved: 'Resolved',
+}
+
+const STATUS_TABS = ['all', 'active', 'resolved'] as const
+type StatusTab = (typeof STATUS_TABS)[number]
+
+const SEVERITY_FILTERS = ['all', 'p1', 'p2', 'p3', 'p4'] as const
+type SeverityFilter = (typeof SEVERITY_FILTERS)[number]
 
 export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFeedProps) {
-  const [statusTab, setStatusTab] = useState<'all' | 'active' | 'resolved'>('all')
-  const [severityFilter, setSeverityFilter] = useState<'all' | IncidentSeverity>('all')
+  const [statusTab, setStatusTab] = useState<StatusTab>('all')
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
 
   const filteredIncidents = incidents.filter((incident) => {
     if (statusTab === 'active' && incident.status === 'resolved') return false
@@ -28,22 +40,23 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
   })
 
   return (
-    <section aria-labelledby="incidents-heading" className="dashboard-section">
+    <section aria-labelledby="incidents-heading">
       <div className="section-header">
         <div>
-          <span className="section-eyebrow">Operations</span>
-          <h2 id="incidents-heading">Incident Feed & Timeline</h2>
+          <h2 className="section-heading" id="incidents-heading">
+            Incidents
+          </h2>
+          <p className="section-description">Open and resolved incidents, newest first.</p>
         </div>
 
-        <div className="filter-controls">
-          <div className="tabs" role="tablist" aria-label="Incident status view">
-            {(['all', 'active', 'resolved'] as const).map((tab) => (
+        <div className="filter-row">
+          <div className="segmented" role="group" aria-label="Filter incidents by status">
+            {STATUS_TABS.map((tab) => (
               <button
-                aria-selected={statusTab === tab}
-                className={`tab-btn ${statusTab === tab ? 'active' : ''}`}
+                aria-pressed={statusTab === tab}
+                className={`segmented-btn ${statusTab === tab ? 'active' : ''}`}
                 key={tab}
                 onClick={() => setStatusTab(tab)}
-                role="tab"
                 type="button"
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -51,123 +64,89 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
             ))}
           </div>
 
-          <div className="severity-select-wrapper">
-            <label htmlFor="severity-filter" className="sr-only">
-              Filter by Severity
-            </label>
-            <select
-              id="severity-filter"
-              onChange={(e) => setSeverityFilter(e.target.value as any)}
-              value={severityFilter}
-            >
-              <option value="all">All Severities</option>
-              <option value="p1">P1 - Critical</option>
-              <option value="p2">P2 - Major</option>
-              <option value="p3">P3 - Minor</option>
-              <option value="p4">P4 - Low</option>
-            </select>
+          <div className="segmented" role="group" aria-label="Filter incidents by severity">
+            {SEVERITY_FILTERS.map((severity) => (
+              <button
+                aria-pressed={severityFilter === severity}
+                className={`segmented-btn ${severityFilter === severity ? 'active' : ''}`}
+                key={severity}
+                onClick={() => setSeverityFilter(severity)}
+                type="button"
+              >
+                {severity === 'all' ? 'All' : severity.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="incident-list skeleton-container">
-          {[1, 2, 3].map((i) => (
-            <div className="incident-card skeleton-card" key={i} />
-          ))}
-        </div>
+        <div className="skeleton skeleton-block" />
       ) : filteredIncidents.length === 0 ? (
         <div className="empty-state" role="status">
-          <p>No incidents found matching the active criteria.</p>
+          No incidents match these filters.
         </div>
       ) : (
-        <div className="incident-list" role="feed" aria-label="Incident updates feed">
+        <ul className="incident-timeline" aria-label="Incident timeline">
           {filteredIncidents.map((incident) => {
-            const severityInfo = SEVERITY_CONFIG[incident.severity]
             const isResolved = incident.status === 'resolved'
+            const currentStepIndex = STATUS_STEPS.indexOf(incident.status)
 
             return (
-              <article
+              <li
                 aria-label={`Incident: ${incident.title}`}
-                className={`incident-card ${isResolved ? 'resolved-card' : 'active-card'}`}
+                className={`incident-entry ${isResolved ? 'is-resolved' : 'is-active'}`}
                 key={incident.id}
               >
-                <div className="incident-card-header">
-                  <div className="incident-badges">
-                    <span className={`severity-badge ${severityInfo.class}`}>
-                      {severityInfo.label}
-                    </span>
-                    {incident.serviceName && (
-                      <span className="affected-service-badge">
-                        Service: {incident.serviceName}
-                      </span>
-                    )}
-                    <span className={`incident-status-pill status-${incident.status}`}>
-                      {incident.status.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => onOpenAddUpdate(incident)}
-                    type="button"
-                  >
-                    {isResolved ? 'Add Note' : '+ Post Update / Resolve'}
-                  </button>
+                <div className="incident-entry-header">
+                  <span className={`severity-badge severity-${incident.severity}`}>
+                    {SEVERITY_LABEL[incident.severity]}
+                  </span>
+                  {incident.serviceName && (
+                    <span className="incident-service">{incident.serviceName}</span>
+                  )}
                 </div>
 
                 <h3 className="incident-title">{incident.title}</h3>
                 <p className="incident-summary">{incident.summary}</p>
 
-                {/* Status Stepper */}
-                <div className="status-stepper" aria-label="Incident progression steps">
-                  {STATUS_STEPS.map((step, idx) => {
-                    const currentIdx = STATUS_STEPS.indexOf(incident.status)
-                    const isPassed = currentIdx >= idx
-                    const isCurrent = incident.status === step
-
-                    return (
-                      <div
-                        className={`step-item ${isPassed ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}
-                        key={step}
-                      >
-                        <span className="step-dot" />
-                        <span className="step-label">
-                          {step.charAt(0).toUpperCase() + step.slice(1)}
-                        </span>
-                      </div>
-                    )
-                  })}
+                <div aria-label="Incident progress" className="status-steps">
+                  {STATUS_STEPS.map((step, idx) => (
+                    <span
+                      className={`step ${idx <= currentStepIndex ? 'is-done' : ''} ${
+                        step === incident.status ? 'is-current' : ''
+                      }`}
+                      key={step}
+                    >
+                      {STATUS_LABEL[step]}
+                    </span>
+                  ))}
                 </div>
 
-                {/* Timeline Updates */}
                 {incident.updates && incident.updates.length > 0 && (
-                  <div className="incident-timeline">
-                    <h4 className="timeline-heading">Timeline Log</h4>
-                    <ul className="timeline-list">
-                      {incident.updates.map((update: IncidentUpdate) => (
-                        <li className="timeline-item" key={update.id}>
-                          <div className="timeline-time">
-                            {new Date(update.createdAt).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                          <div className="timeline-content">
-                            <span className={`timeline-status-tag status-${update.status}`}>
-                              {update.status}
-                            </span>
-                            <p className="timeline-message">{update.message}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="incident-updates">
+                    {incident.updates.map((update: IncidentUpdate) => (
+                      <li className="incident-update" key={update.id}>
+                        <span className="update-time">
+                          {new Date(update.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        <span className="update-status">{STATUS_LABEL[update.status]}</span>
+                        <span className="update-message">{update.message}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </article>
+
+                <button className="btn btn-sm btn-secondary" onClick={() => onOpenAddUpdate(incident)} type="button">
+                  {isResolved ? 'Add note' : 'Update status'}
+                </button>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </section>
   )
