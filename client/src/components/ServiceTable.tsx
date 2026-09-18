@@ -1,33 +1,49 @@
 import { useState } from 'react'
-import type { Service } from '../../../shared/types'
+import type { Service, ServiceStatus } from '../../../shared/types'
 
-interface ServiceGridProps {
+interface ServiceTableProps {
   services: Service[]
   loading: boolean
 }
 
-export function ServiceGrid({ services, loading }: ServiceGridProps) {
-  const [tierFilter, setTierFilter] = useState<'all' | 'critical' | 'standard' | 'internal'>('all')
+const TIER_FILTERS = ['all', 'critical', 'standard', 'internal'] as const
+type TierFilter = (typeof TIER_FILTERS)[number]
 
-  const filteredServices = services.filter((service) => {
-    if (tierFilter !== 'all' && service.tier !== tierFilter) {
-      return false
-    }
-    return true
-  })
+const STATUS_LABEL: Record<ServiceStatus, string> = {
+  operational: 'Operational',
+  degraded: 'Degraded',
+  outage: 'Outage',
+  maintenance: 'Maintenance',
+}
+
+const STATUS_DOT: Record<ServiceStatus, 'ok' | 'warn' | 'bad' | 'unknown'> = {
+  operational: 'ok',
+  degraded: 'warn',
+  outage: 'bad',
+  maintenance: 'unknown',
+}
+
+export function ServiceTable({ services, loading }: ServiceTableProps) {
+  const [tierFilter, setTierFilter] = useState<TierFilter>('all')
+
+  const filteredServices = services.filter(
+    (service) => tierFilter === 'all' || service.tier === tierFilter,
+  )
 
   return (
-    <section aria-labelledby="services-heading" className="dashboard-section">
+    <section aria-labelledby="services-heading">
       <div className="section-header">
         <div>
-          <span className="section-eyebrow">Topology</span>
-          <h2 id="services-heading">Monitored Services</h2>
+          <h2 className="section-heading" id="services-heading">
+            Services
+          </h2>
+          <p className="section-description">Every registered service and its current status.</p>
         </div>
-        <div className="filter-group" role="group" aria-label="Filter services by tier">
-          {(['all', 'critical', 'standard', 'internal'] as const).map((tier) => (
+        <div className="segmented" role="group" aria-label="Filter services by tier">
+          {TIER_FILTERS.map((tier) => (
             <button
               aria-pressed={tierFilter === tier}
-              className={`filter-btn ${tierFilter === tier ? 'active' : ''}`}
+              className={`segmented-btn ${tierFilter === tier ? 'active' : ''}`}
               key={tier}
               onClick={() => setTierFilter(tier)}
               type="button"
@@ -39,50 +55,50 @@ export function ServiceGrid({ services, loading }: ServiceGridProps) {
       </div>
 
       {loading ? (
-        <div className="service-grid skeleton-container">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div className="service-card skeleton-card" key={i} />
-          ))}
-        </div>
+        <div className="skeleton skeleton-block" />
       ) : filteredServices.length === 0 ? (
         <div className="empty-state" role="status">
-          <p>No services match the selected tier filter.</p>
+          No services match this tier.
         </div>
       ) : (
-        <div className="service-grid">
-          {filteredServices.map((service) => (
-            <article
-              aria-label={`${service.name}: ${service.status}`}
-              className={`service-card status-border-${service.status}`}
-              key={service.id}
-            >
-              <div className="service-header">
-                <div>
-                  <span className={`tier-badge tier-${service.tier}`}>
-                    {service.tier.toUpperCase()}
-                  </span>
-                  <h3>{service.name}</h3>
-                </div>
-                <span className={`status-badge status-${service.status}`}>
-                  <span className="status-indicator-dot" aria-hidden="true" />
-                  {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
-                </span>
-              </div>
-
-              <p className="service-description">{service.description}</p>
-
-              <div className="service-footer">
-                <div className="service-metric">
-                  <span className="label">Monthly SLA</span>
-                  <span className="value">{service.uptimePercentage}%</span>
-                </div>
-                <div className="service-metric">
-                  <span className="label">Last Synced</span>
-                  <span className="value">{new Date(service.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-              </div>
-            </article>
-          ))}
+        <div className="table-wrapper">
+          <table className="services-table">
+            <thead>
+              <tr>
+                <th scope="col">Service</th>
+                <th scope="col">Status</th>
+                <th scope="col">Tier</th>
+                <th scope="col">SLA (30d)</th>
+                <th scope="col">Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredServices.map((service) => (
+                <tr aria-label={`${service.name}: ${service.status}`} key={service.id}>
+                  <td>
+                    <div className="service-name">{service.name}</div>
+                    <div className="service-description">{service.description}</div>
+                  </td>
+                  <td>
+                    <span className={`status-text status-${service.status}`}>
+                      <span aria-hidden="true" className={`status-dot ${STATUS_DOT[service.status]}`} />
+                      {STATUS_LABEL[service.status]}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="tier-badge">{service.tier}</span>
+                  </td>
+                  <td className="mono-cell">{service.uptimePercentage}%</td>
+                  <td className="mono-cell">
+                    {new Date(service.updatedAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
