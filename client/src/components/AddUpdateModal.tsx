@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TriangleAlert, X } from 'lucide-react'
 import type { AddIncidentUpdateDto, Incident, IncidentStatus } from '../../../shared/types'
 import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
@@ -27,7 +28,7 @@ export function AddUpdateModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!message.trim()) {
-      setError('Please provide a message describing the update.')
+      setError('Describe the update before posting it.')
       return
     }
 
@@ -41,7 +42,7 @@ export function AddUpdateModal({
       setMessage('')
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to post update.')
+      setError(err.message || 'Could not post the update.')
     } finally {
       setSubmitting(false)
     }
@@ -58,16 +59,16 @@ export function AddUpdateModal({
       >
         <div className="modal-header">
           <div>
-            <span className="modal-eyebrow">Incident Timeline</span>
-            <h2 id="update-modal-title">Post Timeline Update</h2>
+            <span className="modal-eyebrow">Timeline</span>
+            <h2 id="update-modal-title">Post update</h2>
           </div>
           <button
             aria-label="Close modal"
-            className="close-btn"
+            className="icon-btn"
             onClick={onClose}
             type="button"
           >
-            &times;
+            <X aria-hidden="true" size={18} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -76,33 +77,35 @@ export function AddUpdateModal({
         </p>
 
         {error && (
-          <div className="alert-error" role="alert">
-            {error}
+          <div className="alert alert-error" role="alert">
+            <span className="alert-message">
+              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.75} /> {error}
+            </span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="update-status">Lifecycle State *</label>
+            <label htmlFor="update-status">Status *</label>
             <select
               autoFocus
               id="update-status"
               onChange={(e) => setStatus(e.target.value as IncidentStatus)}
               value={status}
             >
-              <option value="investigating">Investigating - Actively searching for root cause</option>
-              <option value="identified">Identified - Cause found, fix in progress</option>
-              <option value="monitoring">Monitoring - Fix deployed, verifying telemetry</option>
-              <option value="resolved">Resolved - Issue fully remediated (Restores Service Health)</option>
+              <option value="investigating">Investigating: searching for the root cause</option>
+              <option value="identified">Identified: cause found, fix in progress</option>
+              <option value="monitoring">Monitoring: fix deployed, watching telemetry</option>
+              <option value="resolved">Resolved: fully remediated, restores service health</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="update-message">Public Investigation Note *</label>
+            <label htmlFor="update-message">Update *</label>
             <textarea
               id="update-message"
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="e.g. Traffic failed over to secondary cluster. Error rates dropped to normal levels..."
+              placeholder="e.g. Traffic failed over to the secondary cluster. Error rates are back to normal."
               required
               rows={4}
               value={message}
@@ -110,8 +113,8 @@ export function AddUpdateModal({
           </div>
 
           {status === 'resolved' && (
-            <div className="alert-info">
-              Selecting <strong>Resolved</strong> will mark this incident as complete and automatically restore affected service health back to Operational.
+            <div className="alert alert-info">
+              Resolving marks this incident complete and restores the affected service to operational.
             </div>
           )}
 
@@ -120,11 +123,11 @@ export function AddUpdateModal({
               Cancel
             </button>
             <button
-              className={`btn ${status === 'resolved' ? 'btn-success' : 'btn-primary'}`}
+              className={`btn ${status === 'resolved' ? 'btn-primary' : 'btn-secondary'}`}
               disabled={submitting}
               type="submit"
             >
-              {submitting ? 'Posting...' : status === 'resolved' ? 'Resolve Incident' : 'Post Update'}
+              {submitting ? 'Posting...' : status === 'resolved' ? 'Resolve incident' : 'Post update'}
             </button>
           </div>
         </form>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TriangleAlert, X } from 'lucide-react'
 import type { CreateServiceDto, ServiceTier } from '../../../shared/types'
 import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
@@ -22,7 +23,7 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !description.trim()) {
-      setError('Please provide a name and description.')
+      setError('Provide a name and a description.')
       return
     }
 
@@ -38,7 +39,7 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
       setDescription('')
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to register service.')
+      setError(err.message || 'Could not register the service.')
     } finally {
       setSubmitting(false)
     }
@@ -55,53 +56,55 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
       >
         <div className="modal-header">
           <div>
-            <span className="modal-eyebrow">Service Catalog</span>
-            <h2 id="service-modal-title">Register Service</h2>
+            <span className="modal-eyebrow">Service catalog</span>
+            <h2 id="service-modal-title">Register service</h2>
           </div>
           <button
             aria-label="Close modal"
-            className="close-btn"
+            className="icon-btn"
             onClick={onClose}
             type="button"
           >
-            &times;
+            <X aria-hidden="true" size={18} strokeWidth={1.75} />
           </button>
         </div>
 
         {error && (
-          <div className="alert-error" role="alert">
-            {error}
+          <div className="alert alert-error" role="alert">
+            <span className="alert-message">
+              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.75} /> {error}
+            </span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="service-name">Service Name *</label>
+            <label htmlFor="service-name">Service name *</label>
             <input
               autoFocus
               id="service-name"
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Identity Management Service"
+              placeholder="e.g. Identity management service"
               required
               value={name}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="service-tier">Criticality Tier *</label>
+            <label htmlFor="service-tier">Tier *</label>
             <select
               id="service-tier"
               onChange={(e) => setTier(e.target.value as ServiceTier)}
               value={tier}
             >
-              <option value="critical">Critical (Customer Facing, 99.99% SLA)</option>
-              <option value="standard">Standard (Core Features, 99.9% SLA)</option>
-              <option value="internal">Internal (Developer Tooling, 99.5% SLA)</option>
+              <option value="critical">Critical: customer facing, 99.99% SLA</option>
+              <option value="standard">Standard: core features, 99.9% SLA</option>
+              <option value="internal">Internal: developer tooling, 99.5% SLA</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="service-description">Service Responsibility & Overview *</label>
+            <label htmlFor="service-description">Description *</label>
             <textarea
               id="service-description"
               onChange={(e) => setDescription(e.target.value)}
@@ -117,7 +120,7 @@ export function NewServiceModal({ isOpen, onClose, onSubmit }: NewServiceModalPr
               Cancel
             </button>
             <button className="btn btn-primary" disabled={submitting} type="submit">
-              {submitting ? 'Registering...' : 'Register Service'}
+              {submitting ? 'Registering...' : 'Register service'}
             </button>
           </div>
         </form>

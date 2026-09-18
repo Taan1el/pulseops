@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { TriangleAlert } from 'lucide-react'
 import type {
   CreateIncidentDto,
   CreateServiceDto,
@@ -8,10 +9,10 @@ import type {
   SystemMetrics,
 } from '../../shared/types'
 import { api } from './services/api'
-import { Navbar } from './components/Navbar'
-import { DemoModeBanner } from './components/DemoModeBanner'
-import { MetricsCards } from './components/MetricsCards'
-import { ServiceGrid } from './components/ServiceGrid'
+import { Header } from './components/Header'
+import { DemoBanner } from './components/DemoBanner'
+import { StatsStrip } from './components/StatsStrip'
+import { ServiceTable } from './components/ServiceTable'
 import { IncidentFeed } from './components/IncidentFeed'
 import { CreateIncidentModal } from './components/CreateIncidentModal'
 import { AddUpdateModal } from './components/AddUpdateModal'
@@ -72,7 +73,7 @@ export function App() {
 
   const handleCreateIncident = async (dto: CreateIncidentDto) => {
     await api.createIncident(dto)
-    showToast(`Declared ${dto.severity.toUpperCase()} incident: "${dto.title}"`)
+    showToast(`Declared a ${dto.severity.toUpperCase()} incident: "${dto.title}"`)
     await loadDashboardData()
   }
 
@@ -80,15 +81,15 @@ export function App() {
     await api.addIncidentUpdate(incidentId, dto)
     showToast(
       dto.status === 'resolved'
-        ? 'Incident resolved! Service health restored.'
-        : `Timeline updated to: ${dto.status}`,
+        ? 'Incident resolved. Service health restored.'
+        : `Timeline updated to ${dto.status}.`,
     )
     await loadDashboardData()
   }
 
   const handleCreateService = async (dto: CreateServiceDto) => {
     await api.createService(dto)
-    showToast(`Registered new service: "${dto.name}"`)
+    showToast(`Registered "${dto.name}"`)
     await loadDashboardData()
   }
 
@@ -102,24 +103,25 @@ export function App() {
         </aside>
       )}
 
-      <Navbar
+      {import.meta.env.VITE_DEMO_MODE === 'true' && <DemoBanner />}
+
+      <Header
         activeIncidentsCount={activeIncidents.length}
         dataStatus={loadFailed ? (metrics ? 'stale' : 'unavailable') : metrics ? 'ready' : 'loading'}
         onOpenNewServiceModal={() => setIsNewServiceOpen(true)}
         onOpenReportModal={() => setIsReportOpen(true)}
       />
 
-      {import.meta.env.VITE_DEMO_MODE === 'true' && <DemoModeBanner />}
-
       <main className="main-content">
         {loadFailed && (
-          <section className="alert-error dashboard-error" aria-label="Dashboard connection error">
-            <p role="alert">
+          <section aria-label="Dashboard connection error" className="alert alert-error">
+            <span className="alert-message" role="alert">
+              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.75} />
               Unable to load dashboard data.{' '}
               {metrics
                 ? 'Showing the last successfully loaded data. It may be outdated.'
                 : 'Service health and incidents are unavailable. Try again to load them.'}
-            </p>
+            </span>
             <button
               className="btn btn-secondary"
               disabled={loading}
@@ -132,20 +134,26 @@ export function App() {
         )}
 
         {(!loadFailed || metrics) && (
-          <div aria-busy={loading}>
-            <MetricsCards loading={loading && !metrics} metrics={metrics} />
-
-            <div className="dashboard-grid">
-              <ServiceGrid loading={loading && !metrics} services={services} />
-              <IncidentFeed
-                incidents={incidents}
-                loading={loading && !metrics}
-                onOpenAddUpdate={(incident) => setSelectedIncident(incident)}
-              />
-            </div>
+          <div aria-busy={loading} className="dashboard-stack">
+            <StatsStrip loading={loading && !metrics} metrics={metrics} />
+            <ServiceTable loading={loading && !metrics} services={services} />
+            <IncidentFeed
+              incidents={incidents}
+              loading={loading && !metrics}
+              onOpenAddUpdate={(incident) => setSelectedIncident(incident)}
+            />
           </div>
         )}
       </main>
+
+      <footer className="app-footer">
+        <div>PulseOps</div>
+        <div className="footer-links">
+          <a href="https://github.com/Taan1el/pulseops" rel="noreferrer" target="_blank">
+            Source on GitHub
+          </a>
+        </div>
+      </footer>
 
       {/* Modals */}
       <CreateIncidentModal

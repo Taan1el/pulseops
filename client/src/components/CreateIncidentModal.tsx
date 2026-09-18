@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TriangleAlert, X } from 'lucide-react'
 import type { CreateIncidentDto, IncidentSeverity, Service } from '../../../shared/types'
 import { useEscapeToClose } from '../hooks/useEscapeToClose'
 
@@ -29,7 +30,7 @@ export function CreateIncidentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !summary.trim() || !serviceId) {
-      setError('Please fill out all required fields.')
+      setError('Fill out every required field.')
       return
     }
 
@@ -46,7 +47,7 @@ export function CreateIncidentModal({
       setSummary('')
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to create incident.')
+      setError(err.message || 'Could not declare the incident.')
     } finally {
       setSubmitting(false)
     }
@@ -63,33 +64,35 @@ export function CreateIncidentModal({
       >
         <div className="modal-header">
           <div>
-            <span className="modal-eyebrow">Emergency Operations</span>
-            <h2 id="modal-title">Declare Incident</h2>
+            <span className="modal-eyebrow">Incident</span>
+            <h2 id="modal-title">Declare incident</h2>
           </div>
           <button
             aria-label="Close modal"
-            className="close-btn"
+            className="icon-btn"
             onClick={onClose}
             type="button"
           >
-            &times;
+            <X aria-hidden="true" size={18} strokeWidth={1.75} />
           </button>
         </div>
 
         {error && (
-          <div className="alert-error" role="alert">
-            {error}
+          <div className="alert alert-error" role="alert">
+            <span className="alert-message">
+              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.75} /> {error}
+            </span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="incident-title">Incident Title *</label>
+            <label htmlFor="incident-title">Incident title *</label>
             <input
               autoFocus
               id="incident-title"
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Elevated Database Connection Pool Saturation"
+              placeholder="e.g. Elevated database connection pool saturation"
               required
               value={title}
             />
@@ -97,7 +100,7 @@ export function CreateIncidentModal({
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="incident-service">Primary Affected Service *</label>
+              <label htmlFor="incident-service">Affected service *</label>
               <select
                 id="incident-service"
                 onChange={(e) => setServiceId(Number(e.target.value))}
@@ -112,26 +115,26 @@ export function CreateIncidentModal({
             </div>
 
             <div className="form-group">
-              <label htmlFor="incident-severity">Impact Severity *</label>
+              <label htmlFor="incident-severity">Severity *</label>
               <select
                 id="incident-severity"
                 onChange={(e) => setSeverity(e.target.value as IncidentSeverity)}
                 value={severity}
               >
-                <option value="p1">P1 - Critical Outage (Sets Service Outage)</option>
-                <option value="p2">P2 - Major Impairment (Sets Service Degraded)</option>
-                <option value="p3">P3 - Minor Disruption (Degraded)</option>
-                <option value="p4">P4 - Low / Informational</option>
+                <option value="p1">P1: critical outage, sets the service to outage</option>
+                <option value="p2">P2: major impairment, sets the service to degraded</option>
+                <option value="p3">P3: minor disruption, degrades an operational service</option>
+                <option value="p4">P4: low impact, informational</option>
               </select>
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="incident-summary">Initial Triage Summary *</label>
+            <label htmlFor="incident-summary">Summary *</label>
             <textarea
               id="incident-summary"
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="Describe symptoms, impact on customers, and initial diagnostic findings..."
+              placeholder="Describe the symptoms, customer impact, and what you know so far."
               required
               rows={4}
               value={summary}
@@ -143,7 +146,7 @@ export function CreateIncidentModal({
               Cancel
             </button>
             <button className="btn btn-danger" disabled={submitting} type="submit">
-              {submitting ? 'Declaring...' : 'Declare & Notify Team'}
+              {submitting ? 'Declaring...' : 'Declare incident'}
             </button>
           </div>
         </form>
