@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import App from './App'
@@ -79,7 +79,7 @@ describe('PulseOps Frontend App', () => {
 
     expect(screen.getByRole('heading', { name: 'PulseOps' })).toBeInTheDocument()
     expect(
-      screen.getByText(/Incident & Service Health Platform/),
+      screen.getByText(/Track service health, declare incidents, and follow their timelines/),
     ).toBeInTheDocument()
 
     await waitFor(() => {
@@ -92,8 +92,9 @@ describe('PulseOps Frontend App', () => {
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText('Auth API')).toBeInTheDocument()
-      expect(screen.getByText('Payment Gateway')).toBeInTheDocument()
+      const table = screen.getByRole('table')
+      expect(within(table).getByText('Auth API')).toBeInTheDocument()
+      expect(within(table).getByText('Payment Gateway')).toBeInTheDocument()
     })
   })
 
@@ -102,11 +103,11 @@ describe('PulseOps Frontend App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('High Gateway Latency')).toBeInTheDocument()
-      expect(screen.getByText('P2 - Major Impairment')).toBeInTheDocument()
+      expect(screen.getByText('P2 Major impairment')).toBeInTheDocument()
     })
   })
 
-  it('opens and closes the Declare Incident modal', async () => {
+  it('opens and closes the Declare incident modal', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -114,60 +115,62 @@ describe('PulseOps Frontend App', () => {
       expect(screen.getByText('Auth API')).toBeInTheDocument()
     })
 
-    const reportButton = screen.getByRole('button', { name: 'Report Incident' })
+    const reportButton = screen.getByRole('button', { name: 'Declare incident' })
     await user.click(reportButton)
 
-    expect(screen.getByRole('heading', { name: 'Declare Incident' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Incident Title *')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Declare incident' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Incident title *')).toBeInTheDocument()
 
     const closeBtn = screen.getByRole('button', { name: 'Close modal' })
     await user.click(closeBtn)
 
-    expect(screen.queryByRole('heading', { name: 'Declare Incident' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('opens and closes the Register Service modal', async () => {
+  it('opens and closes the Register service modal', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const registerBtn = screen.getByRole('button', { name: '+ Register Service' })
+    const registerBtn = screen.getByRole('button', { name: 'Register service' })
     await user.click(registerBtn)
 
-    expect(screen.getByRole('heading', { name: 'Register Service' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Service Name *')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Register service' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Service name *')).toBeInTheDocument()
 
     const closeBtn = screen.getByRole('button', { name: 'Close modal' })
     await user.click(closeBtn)
 
-    expect(screen.queryByRole('heading', { name: 'Register Service' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('closes an open modal when Escape is pressed', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Report Incident' }))
-    expect(screen.getByRole('heading', { name: 'Declare Incident' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Declare incident' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
-    expect(screen.queryByRole('heading', { name: 'Declare Incident' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('focuses the first field when the Register Service modal opens', async () => {
+  it('focuses the first field when the Register service modal opens', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: '+ Register Service' }))
+    await user.click(screen.getByRole('button', { name: 'Register service' }))
 
-    expect(screen.getByLabelText('Service Name *')).toHaveFocus()
+    expect(screen.getByLabelText('Service name *')).toHaveFocus()
   })
 
   it('hides the demo mode banner by default', async () => {
     render(<App />)
     await waitFor(() => expect(screen.getByText('Auth API')).toBeInTheDocument())
 
-    expect(screen.queryByText(/Demo mode\./)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Demo: everything runs in your browser/)).not.toBeInTheDocument()
   })
 
   it('shows the demo mode banner and resets data when VITE_DEMO_MODE is enabled', async () => {
@@ -184,13 +187,14 @@ describe('PulseOps Frontend App', () => {
       render(<App />)
       await waitFor(() => expect(screen.getByText('Auth API')).toBeInTheDocument())
 
-      expect(screen.getByText(/Demo mode\./)).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'View the source on GitHub' })).toHaveAttribute(
+      const demoBar = screen.getByRole('status')
+      expect(within(demoBar).getByText(/Demo: everything runs in your browser/)).toBeInTheDocument()
+      expect(within(demoBar).getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
         'href',
         'https://github.com/Taan1el/pulseops',
       )
 
-      await user.click(screen.getByRole('button', { name: 'Reset demo data' }))
+      await user.click(screen.getByRole('button', { name: 'Reset sample data' }))
       expect(reloadSpy).toHaveBeenCalledTimes(1)
     } finally {
       Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
@@ -205,10 +209,10 @@ describe('PulseOps Frontend App', () => {
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load dashboard data.')
       expect(screen.getByText('System health unavailable')).toBeInTheDocument()
-      expect(screen.queryByText('All Systems Operational')).not.toBeInTheDocument()
-      expect(screen.queryByText('No services match the selected tier filter.')).not.toBeInTheDocument()
-      expect(screen.queryByText('No incidents found matching the active criteria.')).not.toBeInTheDocument()
-      expect(screen.queryByRole('region', { name: 'System Metrics' })).not.toBeInTheDocument()
+      expect(screen.queryByText('All systems operational')).not.toBeInTheDocument()
+      expect(screen.queryByText('No services match this tier.')).not.toBeInTheDocument()
+      expect(screen.queryByText('No incidents match these filters.')).not.toBeInTheDocument()
+      expect(screen.queryByRole('region', { name: 'System metrics' })).not.toBeInTheDocument()
 
       vi.useFakeTimers()
       act(() => vi.advanceTimersByTime(5000))
@@ -224,10 +228,10 @@ describe('PulseOps Frontend App', () => {
     }))
     render(<App />)
     expect(screen.getByText('Loading system health')).toBeInTheDocument()
-    expect(screen.queryByText('All Systems Operational')).not.toBeInTheDocument()
+    expect(screen.queryByText('All systems operational')).not.toBeInTheDocument()
 
     await act(async () => completeMetrics(mockMetrics))
-    expect(screen.getByText('1 Active Incident')).toBeInTheDocument()
+    expect(screen.getByText('1 active incident')).toBeInTheDocument()
   })
 
   it('retries all dashboard reads and disables retry until they settle', async () => {
@@ -276,10 +280,11 @@ describe('PulseOps Frontend App', () => {
 
     vi.mocked(api.getServices).mockResolvedValue([...mockServices, createdService])
     vi.mocked(api.getMetrics).mockRejectedValueOnce(new Error('Metrics unavailable'))
-    await user.click(screen.getByRole('button', { name: '+ Register Service' }))
-    await user.type(screen.getByLabelText('Service Name *'), 'Search API')
-    await user.type(screen.getByLabelText('Service Responsibility & Overview *'), 'Search service')
-    await user.click(screen.getByRole('button', { name: 'Register Service' }))
+    await user.click(screen.getByRole('button', { name: 'Register service' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Service name *'), 'Search API')
+    await user.type(within(dialog).getByLabelText('Description *'), 'Search service')
+    await user.click(within(dialog).getByRole('button', { name: 'Register service' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Showing the last successfully loaded data. It may be outdated.')
     expect(screen.getByText('System health may be outdated')).toBeInTheDocument()
@@ -305,17 +310,18 @@ describe('PulseOps Frontend App', () => {
     vi.mocked(api.getMetrics).mockReturnValueOnce(new Promise((resolve) => {
       completeMetrics = resolve
     }))
-    await user.click(screen.getByRole('button', { name: '+ Register Service' }))
-    await user.type(screen.getByLabelText('Service Name *'), 'Search API')
-    await user.type(screen.getByLabelText('Service Responsibility & Overview *'), 'Search service')
-    await user.click(screen.getByRole('button', { name: 'Register Service' }))
+    await user.click(screen.getByRole('button', { name: 'Register service' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Service name *'), 'Search API')
+    await user.type(within(dialog).getByLabelText('Description *'), 'Search service')
+    await user.click(within(dialog).getByRole('button', { name: 'Register service' }))
 
     expect(api.getMetrics).toHaveBeenCalledTimes(2)
-    expect(screen.getByText('1 Active Incident')).toBeInTheDocument()
+    expect(screen.getByText('1 active incident')).toBeInTheDocument()
     expect(screen.queryByText('Loading system health')).not.toBeInTheDocument()
 
     await act(async () => completeMetrics(mockMetrics))
-    expect(screen.getByText('1 Active Incident')).toBeInTheDocument()
+    expect(screen.getByText('1 active incident')).toBeInTheDocument()
   })
 
   it('ignores a slow earlier load that fails after a newer load succeeded', async () => {
@@ -327,15 +333,44 @@ describe('PulseOps Frontend App', () => {
     }))
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: '+ Register Service' }))
-    await user.type(screen.getByLabelText('Service Name *'), 'Search API')
-    await user.type(screen.getByLabelText('Service Responsibility & Overview *'), 'Search service')
-    await user.click(screen.getByRole('button', { name: 'Register Service' }))
+    await user.click(screen.getByRole('button', { name: 'Register service' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Service name *'), 'Search API')
+    await user.type(within(dialog).getByLabelText('Description *'), 'Search service')
+    await user.click(within(dialog).getByRole('button', { name: 'Register service' }))
     expect(await screen.findByText('Auth API')).toBeInTheDocument()
 
     await act(async () => failFirstLoad(new Error('Timed out')))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByText('1 Active Incident')).toBeInTheDocument()
+    expect(screen.getByText('1 active incident')).toBeInTheDocument()
     expect(screen.getByText('High Gateway Latency')).toBeInTheDocument()
+  })
+
+  it('opens the update modal from the incident timeline and posts an update', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(api, 'addIncidentUpdate').mockResolvedValue({
+      incident: { ...mockIncidents[0], status: 'identified' },
+      update: {
+        id: 2,
+        incidentId: 101,
+        status: 'identified',
+        message: 'Root cause found.',
+        createdAt: new Date().toISOString(),
+      },
+    })
+    render(<App />)
+    await screen.findByText('High Gateway Latency')
+
+    await user.click(screen.getByRole('button', { name: 'Update status' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Post update' })).toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText('Update *'), 'Root cause found.')
+    await user.click(within(dialog).getByRole('button', { name: 'Post update' }))
+
+    expect(api.addIncidentUpdate).toHaveBeenCalledWith(101, {
+      status: 'identified',
+      message: 'Root cause found.',
+    })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })
