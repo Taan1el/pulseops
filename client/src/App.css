@@ -64,7 +64,7 @@ textarea {
 .demo-bar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding-block: 0.65rem;
+  padding-block: 0;
   padding-inline: var(--page-pad);
   display: flex;
   align-items: center;
@@ -76,13 +76,15 @@ textarea {
 
 .demo-bar-links {
   display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
 .link-btn {
   background: none;
   border: none;
-  padding: 0;
+  padding: 0 0.25rem;
+  min-height: 44px;
   color: var(--accent);
   font-size: inherit;
   font-family: inherit;
