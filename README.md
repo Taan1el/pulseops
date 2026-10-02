@@ -94,7 +94,7 @@ Project layout:
 ```
 pulseops/
   client/               React 19 + TypeScript dashboard (Vite)
-    src/components/     Header, demo bar, stats strip, services table, incident timeline, modals
+    src/components/     Masthead, demo bar, service sidebar, incident timeline, modals
     src/services/       api.ts (HTTP client) and demoApi.ts (in-browser stand-in)
   server/               Express + TypeScript API
     src/routes/         Route definitions per resource
