@@ -777,6 +777,8 @@ textarea {
 
   .newsroom { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
 
+  .timeline-region { order: -1; }
+
   .service-rail {
     padding-right: 0;
     border-right: none;

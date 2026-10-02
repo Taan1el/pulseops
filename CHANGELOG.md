@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- New visual identity modeled on a newsroom status page: one large serif sentence states the current health ("All systems operational" or the number of active incidents), with the 30-day figures on a single line below it.
+- The page now has two regions: a narrow service sidebar (status dot, name, uptime meter) on the left and the incident timeline as the main column on the right. On phones the timeline comes first.
+- Switched to Source Serif 4 for headings, Albert Sans for text and Spline Sans Mono for numbers and times, on a cool paper background with hairline rules and 4px corners.
 - Redesigned the dashboard: a light paper theme with one signal-blue accent color, replacing the dark navy header and its four saturated status-pill colors.
 - Self-hosted the Sora, Geist and Geist Mono fonts instead of the system font stack, with numbers, IDs and timestamps set in mono everywhere.
 - Removed all gradients and drop shadows from the header, stat cards, service cards and buttons; dialogs keep a shadow since they float above the page.

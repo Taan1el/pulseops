@@ -12,9 +12,9 @@ The demo runs entirely in your browser: there is no backend behind it, and the d
 
 ## Screenshots
 
-![Dashboard with the stats strip, the services table, and the incident timeline](docs/screenshots/01-dashboard.png)
+![Status headline over a narrow service sidebar and the incident timeline](docs/screenshots/01-dashboard.png)
 
-More screenshots: [a P1 incident declared against a service, showing the outage status and timeline](docs/screenshots/02-incident-declared.png), [the dashboard at phone width](docs/screenshots/03-mobile.png).
+More screenshots: [a newly declared incident at the top of the timeline, with the service marked degraded in the sidebar](docs/screenshots/02-incident-declared.png), [the dashboard at phone width](docs/screenshots/03-mobile.png).
 
 ## Features
 
