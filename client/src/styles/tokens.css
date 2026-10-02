@@ -1,20 +1,20 @@
 :root {
-  --paper: #faf9f6;        /* page background */
-  --surface: #ffffff;      /* panels, tables */
-  --ink: #17160f;          /* primary text */
-  --ink-2: #57544b;        /* secondary text */
-  --ink-3: #8a867b;        /* tertiary text, placeholders */
-  --rule: #e3e0d7;         /* borders and dividers */
-  --rule-strong: #cfcabd;  /* input borders, table header rule */
+  --paper: #f4f6fa;        /* page background, cool newsprint */
+  --surface: #ffffff;      /* panels, dialogs */
+  --ink: #101828;          /* primary text */
+  --ink-2: #475467;        /* secondary text */
+  --ink-3: #5d6a80;        /* tertiary text, placeholders */
+  --rule: #dde2ec;         /* hairlines */
+  --rule-strong: #b9c1d1;  /* input borders */
   --accent: #1b4fd8;       /* pulseops: incident paging */
   --accent-ink: #ffffff;   /* text on accent fills */
-  --accent-soft: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  /* status colors are data, not decoration: use only for status text, dots, small badges and meter fills */
+  --accent-soft: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  /* status colors are data, not decoration: status text, dots and meter fills only */
   --ok: #1f7a4d;
-  --warn: #a15c00;
+  --warn: #9a5700;
   --bad: #b3261e;
-  --radius: 6px;
-  --font-heading: "Sora Variable", "Sora", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+  --radius: 4px;
+  --font-heading: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+  --font-body: "Albert Sans Variable", "Albert Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Spline Sans Mono Variable", "Spline Sans Mono", ui-monospace, "SFMono-Regular", monospace;
 }
