@@ -9,10 +9,9 @@ import type {
   SystemMetrics,
 } from '../../shared/types'
 import { api } from './services/api'
-import { Header } from './components/Header'
+import { Masthead } from './components/Masthead'
 import { DemoBanner } from './components/DemoBanner'
-import { StatsStrip } from './components/StatsStrip'
-import { ServiceTable } from './components/ServiceTable'
+import { ServiceList } from './components/ServiceList'
 import { IncidentFeed } from './components/IncidentFeed'
 import { CreateIncidentModal } from './components/CreateIncidentModal'
 import { AddUpdateModal } from './components/AddUpdateModal'
@@ -105,7 +104,8 @@ export function App() {
 
       {import.meta.env.VITE_DEMO_MODE === 'true' && <DemoBanner />}
 
-      <Header
+      <Masthead
+        metrics={metrics}
         activeIncidentsCount={activeIncidents.length}
         dataStatus={loadFailed ? (metrics ? 'stale' : 'unavailable') : metrics ? 'ready' : 'loading'}
         onOpenNewServiceModal={() => setIsNewServiceOpen(true)}
@@ -134,9 +134,8 @@ export function App() {
         )}
 
         {(!loadFailed || metrics) && (
-          <div aria-busy={loading} className="dashboard-stack">
-            <StatsStrip loading={loading && !metrics} metrics={metrics} />
-            <ServiceTable loading={loading && !metrics} services={services} />
+          <div aria-busy={loading} className="newsroom">
+            <ServiceList loading={loading && !metrics} services={services} />
             <IncidentFeed
               incidents={incidents}
               loading={loading && !metrics}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatCount } from '../utils/pluralize'
 import type { Incident, IncidentSeverity, IncidentStatus, IncidentUpdate } from '../../../shared/types'
 
 interface IncidentFeedProps {
@@ -40,13 +41,13 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
   })
 
   return (
-    <section aria-labelledby="incidents-heading">
-      <div className="section-header">
+    <section aria-labelledby="incidents-heading" className="timeline-region">
+      <div className="timeline-head">
         <div>
-          <h2 className="section-heading" id="incidents-heading">
-            Incidents
+          <h2 className="timeline-heading" id="incidents-heading">
+            Incident timeline
           </h2>
-          <p className="section-description">Open and resolved incidents, newest first.</p>
+          <p className="timeline-sub">{formatCount(filteredIncidents.length, 'incident')}, newest first.</p>
         </div>
 
         <div className="filter-row">
@@ -87,7 +88,7 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
           No incidents match these filters.
         </div>
       ) : (
-        <ul className="incident-timeline" aria-label="Incident timeline">
+        <ol aria-label="Incident timeline" className="incident-timeline">
           {filteredIncidents.map((incident) => {
             const isResolved = incident.status === 'resolved'
             const currentStepIndex = STATUS_STEPS.indexOf(incident.status)
@@ -98,6 +99,12 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
                 className={`incident-entry ${isResolved ? 'is-resolved' : 'is-active'}`}
                 key={incident.id}
               >
+                <time className="incident-when" dateTime={incident.createdAt}>
+                  {new Date(incident.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                  {' '}
+                  {new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </time>
+
                 <div className="incident-entry-header">
                   <span className={`severity-badge severity-${incident.severity}`}>
                     {SEVERITY_LABEL[incident.severity]}
@@ -146,7 +153,7 @@ export function IncidentFeed({ incidents, loading, onOpenAddUpdate }: IncidentFe
               </li>
             )
           })}
-        </ul>
+        </ol>
       )}
     </section>
   )

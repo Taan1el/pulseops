@@ -77,24 +77,29 @@ describe('PulseOps Frontend App', () => {
   it('renders application brand and metrics', async () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: 'PulseOps' })).toBeInTheDocument()
-    expect(
-      screen.getByText(/Track service health, declare incidents, and follow their timelines/),
-    ).toBeInTheDocument()
+    expect(screen.getAllByText('PulseOps').length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loading system health')
 
     await waitFor(() => {
       expect(screen.getByText('99.91%')).toBeInTheDocument()
       expect(screen.getByText('1 / 2')).toBeInTheDocument()
     })
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('1 active incident')
   })
 
-  it('renders service cards and operational statuses', async () => {
+  it('lists services with their statuses in the sidebar', async () => {
     render(<App />)
 
     await waitFor(() => {
-      const table = screen.getByRole('table')
-      expect(within(table).getByText('Auth API')).toBeInTheDocument()
-      expect(within(table).getByText('Payment Gateway')).toBeInTheDocument()
+      const list = screen.getByRole('list', { name: 'Services' })
+      expect(within(list).getByText('Auth API')).toBeInTheDocument()
+      expect(within(list).getByText('Payment Gateway')).toBeInTheDocument()
+      expect(within(list).getAllByRole('listitem')).toHaveLength(2)
+    })
+
+    await userEvent.setup().selectOptions(screen.getByLabelText('Tier'), 'internal')
+    await waitFor(() => {
+      expect(screen.getByText('No services match this tier.')).toBeInTheDocument()
     })
   })
 
