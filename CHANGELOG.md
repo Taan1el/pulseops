@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A test that finds every scrolling container in the stylesheet and checks it is keyboard reachable and named, so new scrollable areas cannot ship without that.
 - Automated accessibility checks (axe, WCAG 2 A and AA rules) for the status page, the declare incident dialog and the register service dialog. Color contrast is verified outside jsdom.
 
 ### Changed
