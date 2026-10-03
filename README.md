@@ -174,10 +174,12 @@ curl -X POST http://localhost:4000/api/incidents \
 
 ## Testing
 
-65 tests across both workspaces, run with `npm test`:
+68 tests across both workspaces, run with `npm test`:
 
 - **Server** (`server/test/`): the domain logic in `shared/domain.ts` (slug generation, status transitions, metrics) with edge cases; the full HTTP API through `supertest`, covering happy paths, validation errors, not-found and conflict responses, malformed JSON, and static-client serving.
 - **Client** (`client/src/`): the dashboard's data loading, error and retry behavior (including stale in-flight requests), modal interactions and keyboard support, and the in-browser demo API's behavior against the same rules the server enforces.
+
+The client suite also includes automated accessibility checks (axe, WCAG 2 A and AA rules) for the status page and both dialogs. Color contrast cannot be computed in jsdom, so it is checked outside the test suite.
 
 No test suite mocks a heading render or snapshot-tests a component tree; each test exercises real behavior.
 

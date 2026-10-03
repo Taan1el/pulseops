@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Automated accessibility checks (axe, WCAG 2 A and AA rules) for the status page, the declare incident dialog and the register service dialog. Color contrast is verified outside jsdom.
+
 ### Changed
 
 - New visual identity modeled on a newsroom status page: one large serif sentence states the current health ("All systems operational" or the number of active incidents), with the 30-day figures on a single line below it.
